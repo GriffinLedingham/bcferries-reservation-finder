@@ -1,0 +1,23 @@
+{
+  "name": "booking",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "Griffin Ledingham <gcledingham@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "@puppeteer/replay": "^2.13.2",
+    "@types/": "puppeteer/replay",
+    "@types/follow-redirects": "^1.14.1",
+    "@types/node": "^20.4.2",
+    "@types/node-notifier": "^8.0.2",
+    "cheerio": "^1.0.0-rc.12",
+    "follow-redirects": "^1.15.2",
+    "fs": "^0.0.1-security",
+    "node-notifier": "^10.0.1",
+    "puppeteer": "^20.8.3",
+    "querystring": "^0.2.1",
+    "ts-node": "^10.9.1",
+    "tsc": "^2.0.4",
+    "typescript": "^5.1.6"
+  }
+}
