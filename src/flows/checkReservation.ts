@@ -1,7 +1,13 @@
 import { Browser, Page } from "puppeteer";
 import cheerio from "cheerio";
 import notifier from "node-notifier";
-import { scrollIntoViewIfNeeded, waitForSelectors } from "../utils";
+import {
+  changeElementValue,
+  changeSelectElement,
+  scrollIntoViewIfNeeded,
+  typeIntoElement,
+  waitForSelectors,
+} from "../utils";
 
 function findReservation(html: string) {
   const $ = cheerio.load(html);
@@ -62,14 +68,20 @@ function findReservation(html: string) {
   }
 }
 
-export function scrapeReservations(input: {
-  departureTerminal: String;
-  arrivalTerminal: String;
-  departureDate: String;
-  browser: Browser;
-  page: Page;
-  timeout: number;
-}) {
+export function scrapeReservations(
+  input: {
+    departureTerminal: String;
+    arrivalTerminal: String;
+    departureDate: String;
+    browser: Browser;
+    page: Page;
+    timeout: number;
+    numberAdults: number;
+    numberChildren?: number;
+    numberInfants?: number;
+  },
+  cb: Function
+) {
   const {
     departureTerminal,
     arrivalTerminal,
@@ -77,6 +89,9 @@ export function scrapeReservations(input: {
     browser,
     page,
     timeout,
+    numberAdults,
+    numberChildren,
+    numberInfants,
   } = input;
 
   console.log(
@@ -248,35 +263,34 @@ export function scrapeReservations(input: {
     {
       const targetPage = page;
       await scrollIntoViewIfNeeded(
-        [
-          [`aria/${departureDate}[role="link"]`],
-          ["#home tr:nth-of-type(4) > td:nth-of-type(7) > a"],
-          [
-            'xpath///*[@id="check-in-datepicker"]/div/table/tbody/tr[4]/td[7]/a',
-          ],
-          ["pierce/#home tr:nth-of-type(4) > td:nth-of-type(7) > a"],
-        ],
+        [["#home .depart.datepicker-input"]],
         targetPage,
         timeout
       );
       const element = await waitForSelectors(
-        [
-          [`aria/${departureDate}[role="link"]`],
-          ["#home tr:nth-of-type(4) > td:nth-of-type(7) > a"],
-          [
-            'xpath///*[@id="check-in-datepicker"]/div/table/tbody/tr[4]/td[7]/a',
-          ],
-          ["pierce/#home tr:nth-of-type(4) > td:nth-of-type(7) > a"],
-        ],
+        [["#home .depart.datepicker-input"]],
         targetPage,
         { timeout, visible: true }
       );
-      await element.click({
-        offset: {
-          x: 18.5,
-          y: 17.265625,
-        },
-      });
+      const inputType = await element.evaluate((el: { type: any }) => el.type);
+      if (inputType === "select-one") {
+        await changeSelectElement(element, departureDate);
+      } else if (
+        [
+          "textarea",
+          "text",
+          "url",
+          "tel",
+          "search",
+          "password",
+          "number",
+          "email",
+        ].includes(inputType)
+      ) {
+        await typeIntoElement(element, departureDate);
+      } else {
+        await changeElementValue(element, departureDate);
+      }
     }
     {
       const targetPage = page;
@@ -310,7 +324,8 @@ export function scrapeReservations(input: {
       });
       await Promise.all(promises);
     }
-    {
+    // iterate for number of adults
+    for (let i = 0; i < numberAdults; i++) {
       const targetPage = page;
       await scrollIntoViewIfNeeded(
         [
@@ -345,16 +360,17 @@ export function scrapeReservations(input: {
         },
       });
     }
-    {
+    // iterate for number of children 5-11
+    for (let i = 0; i < (numberChildren || 0); i++) {
       const targetPage = page;
       await scrollIntoViewIfNeeded(
         [
           [
-            "div:nth-of-type(3) div.mb-3 > div:nth-of-type(1) span:nth-of-type(2) > button",
+            "div:nth-of-type(3) div.mb-3 > div:nth-of-type(2) span:nth-of-type(2) > button",
           ],
-          ['xpath///*[@id="ui-id-2"]/div[2]/div[1]/div/span[2]/button'],
+          ['xpath///*[@id="ui-id-2"]/div[2]/div[2]/div/span[2]/button'],
           [
-            "pierce/div:nth-of-type(3) div.mb-3 > div:nth-of-type(1) span:nth-of-type(2) > button",
+            "pierce/div:nth-of-type(3) div.mb-3 > div:nth-of-type(2) span:nth-of-type(2) > button",
           ],
         ],
         targetPage,
@@ -363,11 +379,11 @@ export function scrapeReservations(input: {
       const element = await waitForSelectors(
         [
           [
-            "div:nth-of-type(3) div.mb-3 > div:nth-of-type(1) span:nth-of-type(2) > button",
+            "div:nth-of-type(3) div.mb-3 > div:nth-of-type(2) span:nth-of-type(2) > button",
           ],
-          ['xpath///*[@id="ui-id-2"]/div[2]/div[1]/div/span[2]/button'],
+          ['xpath///*[@id="ui-id-2"]/div[2]/div[2]/div/span[2]/button'],
           [
-            "pierce/div:nth-of-type(3) div.mb-3 > div:nth-of-type(1) span:nth-of-type(2) > button",
+            "pierce/div:nth-of-type(3) div.mb-3 > div:nth-of-type(2) span:nth-of-type(2) > button",
           ],
         ],
         targetPage,
@@ -375,47 +391,13 @@ export function scrapeReservations(input: {
       );
       await element.click({
         offset: {
-          x: 10.5,
-          y: 17.96875,
+          x: 13.171875,
+          y: 11.96875,
         },
       });
     }
-    {
-      const targetPage = page;
-      await scrollIntoViewIfNeeded(
-        [
-          [
-            "div:nth-of-type(3) div.mb-3 > div:nth-of-type(3) span:nth-of-type(2) > button",
-          ],
-          ['xpath///*[@id="ui-id-2"]/div[2]/div[3]/div/span[2]/button'],
-          [
-            "pierce/div:nth-of-type(3) div.mb-3 > div:nth-of-type(3) span:nth-of-type(2) > button",
-          ],
-        ],
-        targetPage,
-        timeout
-      );
-      const element = await waitForSelectors(
-        [
-          [
-            "div:nth-of-type(3) div.mb-3 > div:nth-of-type(3) span:nth-of-type(2) > button",
-          ],
-          ['xpath///*[@id="ui-id-2"]/div[2]/div[3]/div/span[2]/button'],
-          [
-            "pierce/div:nth-of-type(3) div.mb-3 > div:nth-of-type(3) span:nth-of-type(2) > button",
-          ],
-        ],
-        targetPage,
-        { timeout, visible: true }
-      );
-      await element.click({
-        offset: {
-          x: 13.84375,
-          y: 9.96875,
-        },
-      });
-    }
-    {
+    // iterate for number of children 0-4
+    for (let i = 0; i < (numberInfants || 0); i++) {
       const targetPage = page;
       await scrollIntoViewIfNeeded(
         [
@@ -578,6 +560,8 @@ export function scrapeReservations(input: {
     findReservation(pageHtml);
 
     await browser.close();
+
+    cb();
   })().catch((err) => {
     console.error(err);
     process.exit(1);

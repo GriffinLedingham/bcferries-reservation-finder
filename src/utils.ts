@@ -1,4 +1,4 @@
-import puppeteer from "puppeteer";
+import puppeteer, { PuppeteerLaunchOptions } from "puppeteer";
 
 export function formatTerminalNames(terminalName: string | undefined) {
   if (!terminalName) {
@@ -20,10 +20,13 @@ export function formatTerminalNames(terminalName: string | undefined) {
   }
 }
 
-export async function getPuppeteerPage(allowedRequest: Function) {
-  const browser = await puppeteer.launch({
+export async function getPuppeteerPage(
+  puppeteerConfig: PuppeteerLaunchOptions = {
     headless: "new",
-  });
+  },
+  allowedRequest: Function
+) {
+  const browser = await puppeteer.launch(puppeteerConfig);
   const page = await browser.newPage();
 
   await page.setRequestInterception(true);
