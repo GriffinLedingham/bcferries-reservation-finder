@@ -1,4 +1,4 @@
-# bc-ferries-booking
+# bcferries-reservation-finder
 
 A puppeteer script for checking available reservation times on BC Ferries sailing for a given date, departure terminal and arrival terminal.
 
